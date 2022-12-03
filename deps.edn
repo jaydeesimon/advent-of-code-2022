@@ -5,4 +5,5 @@
   clj-http/clj-http {:mvn/version "3.12.3"}}
 
  :aliases {:nextjournal/clerk {:exec-fn nextjournal.clerk/build!
-                               :exec-args {:paths ["src/aoc_2022/day01.clj"]}}}}
+                               :exec-args {:paths ["src/aoc_2022/day01.clj"
+                                                   "src/aoc_2022/day02.clj"]}}}}
