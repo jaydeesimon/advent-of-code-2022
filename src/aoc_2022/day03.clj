@@ -123,3 +123,5 @@
      (map first)
      (map priority)
      (reduce +))
+
+;; Whoo hoo!
