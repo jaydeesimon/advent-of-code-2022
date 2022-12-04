@@ -93,3 +93,33 @@
      (map first) ;; take the first
      (map priority)
      (reduce +))
+
+;; # Part 2
+;;```
+;; Find the item type that corresponds to the badges of each three-Elf group.
+;; What is the sum of the priorities of those item types?
+;;```
+;; For this next part, we need to group the lines in 3s and then for each of those groups,
+;; find the common letters. We can use `partition` for that.
+
+;; Here are the first 10 groups of 3 with their common item.
+(let [rows [["Left" "Middle" "Right" "Common"]]]
+  (->> input
+       str/split-lines
+       (partition 3)
+       (map (fn [[left middle right]]
+              [left middle right
+               (set/intersection (set left) (set middle) (set right))]))
+       (take 10)
+       (into rows)
+       (clerk/table {::clerk/width :full})))
+
+;; Now we can calculate the priorities for all of them and sum it up.
+(->> input
+     str/split-lines
+     (partition 3)
+     (map (fn [[left middle right]]
+            (set/intersection (set left) (set middle) (set right))))
+     (map first)
+     (map priority)
+     (reduce +))
