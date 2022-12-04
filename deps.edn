@@ -6,4 +6,5 @@
 
  :aliases {:nextjournal/clerk {:exec-fn nextjournal.clerk/build!
                                :exec-args {:paths ["src/aoc_2022/day01.clj"
-                                                   "src/aoc_2022/day02.clj"]}}}}
+                                                   "src/aoc_2022/day02.clj"
+                                                   "src/aoc_2022/day03.clj"]}}}}
