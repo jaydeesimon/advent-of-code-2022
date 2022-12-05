@@ -3,9 +3,12 @@
             [nextjournal.clerk :as clerk]
             [clojure.string :as str]))
 
+;; # Day 2
+
+;; Source available on [GitHub.](https://github.com/jaydeesimon/advent-of-code-2022/blob/main/src/aoc_2022/day02.clj)
+
 ;; https://adventofcode.com/2022/day/2
 
-;; # Day 2
 (def input (util/fetch-input 2))
 
 (def move-scores

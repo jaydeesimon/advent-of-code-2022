@@ -6,6 +6,8 @@
 
 ;; # Day 4
 
+;; Source available on [GitHub.](https://github.com/jaydeesimon/advent-of-code-2022/blob/main/src/aoc_2022/day04.clj)
+
 ;; https://adventofcode.com/2022/day/4
 
 (def input (util/fetch-input 4))
