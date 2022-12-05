@@ -8,4 +8,5 @@
                                :exec-args {:paths ["src/aoc_2022/day01.clj"
                                                    "src/aoc_2022/day02.clj"
                                                    "src/aoc_2022/day03.clj"
-                                                   "src/aoc_2022/day04.clj"]}}}}
+                                                   "src/aoc_2022/day04.clj"]
+                                           :out-path "docs/"}}}}

@@ -1,0 +1,8 @@
+{:tasks
+ {:requires ([babashka.fs :as fs])
+
+  build (do
+          (println "Building static HTML")
+          (fs/delete-tree "docs")
+          (fs/create-dir "docs")
+          (clojure "-X:nextjournal/clerk"))}}
