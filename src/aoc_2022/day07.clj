@@ -106,3 +106,32 @@
      (reduce +))
 
 ;; Hooray! 🎉🎉
+
+;; # Part 2
+;; >The total disk space available to the filesystem is 70000000.
+;; To run the update, you need unused space of at least 30000000.
+;; You need to find a directory you can delete that will free up
+;; enough space to run the update.
+
+;; Total used disk space:
+(get-in filesystem ["/" :size])
+
+;; Percentage of used disk space:
+(* (/ (get-in filesystem ["/" :size]) 70000000.) 100)
+
+;; Need this much space:
+(def space-needed
+  (- 30000000 (- 70000000 (get-in filesystem ["/" :size]))))
+
+;; Find all the directories that, if deleted, would give us at least that much space.
+(def directory-size-choices
+  (->> (paths filesystem)
+       (map (fn [path]
+              (get-in filesystem path)))
+       (filter (fn [size]
+                 (>= size space-needed)))))
+
+;; Take the smallest one:
+(apply min directory-size-choices) 
+
+;; Done! 🎉🎉
