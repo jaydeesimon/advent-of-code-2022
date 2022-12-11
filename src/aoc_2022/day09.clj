@@ -26,7 +26,7 @@
 ;; The value will be between 2 and 3.
 (distance [2 3] [1 1])
 
-;; I can calculate which ........,.ction to move in by calculating all of the single moves
+;; I can calculate which direction to move in by calculating all of the single moves
 ;; from a point and then see which one is touching.
 (def directions
   (for [x [-1 0 1]
