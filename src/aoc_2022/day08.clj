@@ -57,8 +57,8 @@
 ;;  35390
 ;;```
 
-;; If we called our hypothetical function `(get-trees coordinate :right)` it would return
-;; `512.` And if I called `(get-tree coordinate :down)` it would return `533`.
+;; If we called our hypothetical function `(get-neighbor-trees coordinate :right)` it would return
+;; `512.` And if I called `(get-neighbor-trees coordinate :down)` it would return `533`.
 
 ;; Getting `:left` and `:right` would be straightforward but getting `:up` and `:down`
 ;; means I may have to transpose the matrix. If I do that, I'll be able to grab slices
@@ -80,12 +80,15 @@
 ;; The above examples are proving to myself that I can transpose the matrix and
 ;; convert `:left` and `:right` to `:down` and `:up.`
 
-;; Version 1
-(defn get-trees [grid [x y] direction]
+;; ## Version 1
+(defn get-neighbor-trees [grid [x y] direction]
   (cond
+    ;; Gotta make sure you reverse the left and down
+    ;; directions since you are looking at it from
+    ;; perspective of the coordinate
     (= direction :left)
     (let [row (get grid x)]
-      (subvec row 0 y))
+      (vec (reverse (subvec row 0 y))))
     
     (= direction :right)
     (let [row (get grid x)]
@@ -96,6 +99,7 @@
           column (get transposed y)]
       (subvec column (inc x) (count column)))
     
+    ;; Gotta reverse!
     (= direction :up)
     (let [transposed (apply mapv vector grid)
           column (get transposed y)]
@@ -104,29 +108,29 @@
     :else
     (throw (ex-info "invalid direction" {:direction direction}))))
 
-(get-trees
+(get-neighbor-trees
   example
   [4 4]
   :right)
 
-(get-trees
+(get-neighbor-trees
   example
   [4 4]
   :left)
 
-(get-trees
+(get-neighbor-trees
   example
   [0 4]
   :down)
 
-(get-trees
+(get-neighbor-trees
   example
   [2 2]
   :up)
 
-;; Version 2
+;; ## Version 2
 
-;; I am going to parse the input into our grid and in addition will tranpose the grid
+;; I am going to parse the input into our grid and in addition will transpose the grid
 ;; and have it ready to go in memory. This will save us a lot of time.
 (def grid
   (->> input
@@ -139,14 +143,14 @@
 (def transposed-grid
   (apply mapv vector grid))
 
-(defn get-trees-v2 [[x y] direction]
+(defn get-neighbor-trees-v2 [[x y] direction]
   (let [grid* (if (#{:left :right} direction)
                 grid
                 transposed-grid)]
     (cond
       (= direction :left)
       (let [row (get grid* x)]
-        (subvec row 0 y))
+        (vec (reverse (subvec row 0 y))))
       
       (= direction :right)
       (let [row (get grid* x)]
@@ -158,9 +162,6 @@
       
       (= direction :up)
       (let [column (get grid* y)]
-        ;; from 0 to x will get me the right
-        ;; elements but since I'm looking up,
-        ;; I need to reverse them
         (vec (reverse (subvec column 0 x))))
       
       :else
@@ -184,10 +185,10 @@
 (->> all-possibilities
      (map (fn [[x y direction]]
             (let [tree (get-in grid [x y])
-                  other-trees (get-trees-v2 [x y] direction)]
+                  other-trees (get-neighbor-trees-v2 [x y] direction)]
               ;; I will know which coordinate is visible from
               ;; every direction. Since I only need to know if
-              ;; at least one direction is visibile, this is
+              ;; at least one direction is visible, this is
               ;; excessive.
               {:coordinates [x y]
                :direction direction
@@ -198,3 +199,43 @@
      count)
 
 ;; Done! 🎉🎉
+
+;; # Part 2
+
+;;>A tree's scenic score is found by multiplying together its viewing distance
+;; in each of the four directions. For this tree, this is 4
+;; (found by multiplying 1 * 1 * 2 * 2).
+
+;;>Consider each tree on your map. What is the highest scenic score possible for any tree?
+
+;; Good thing I considered all possibilities since I'll need it for Part 2.
+
+;; I'll need a function to calculate the viewing distance given a line of other trees.
+(defn viewing-distance [tree other-trees]
+  (loop [c 0
+         other-trees other-trees]
+    (if (not (seq other-trees))
+      c
+      (let [other-tree (first other-trees)]
+        (if (>= other-tree tree)
+          (inc c)
+          (recur (inc c) (rest other-trees)))))))
+
+;; Test that the viewing distance given no other trees is zero ✅
+(viewing-distance 5 [])
+
+;; 🌳 Calculating the largest possible scenic score 🌳
+(->> all-possibilities
+     (map (fn [[x y direction]]
+            (let [tree        (get-in grid [x y])
+                  other-trees (get-neighbor-trees-v2 [x y] direction)]
+              {:coordinates [x y]
+               :direction direction
+               :viewing-distance (viewing-distance tree other-trees)})))
+     (group-by :coordinates)
+     (map (fn [[coordinates group]]
+            (let [viewing-distances (map :viewing-distance group)]
+              (apply * viewing-distances))))
+     (reduce max))
+
+;; Done! 🌳 🎄
