@@ -83,6 +83,12 @@
          (apply min-key :distance)
          :new-location)))
 
+;; Test movement on the same row
+(follow-leader [0 0] [0 2])
+
+;; Test diagonal movement
+(follow-leader [0 0] [1 2])
+
 (def direction->coordinate
   {"L" [0 -1]
    "R" [0 1]
@@ -120,3 +126,5 @@
 ;; >Simulate your complete hypothetical series of motions.
 ;; How many positions does the tail of the rope visit at least once?
 (count (:follower-history state))
+
+;; Done with Part 1 🎉🎉
