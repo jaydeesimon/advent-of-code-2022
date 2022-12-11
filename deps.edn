@@ -11,5 +11,6 @@
                                                    "src/aoc_2022/day04.clj"
                                                    "src/aoc_2022/day05.clj"
                                                    "src/aoc_2022/day06.clj"
-                                                   "src/aoc_2022/day07.clj"]
+                                                   "src/aoc_2022/day07.clj"
+                                                   "src/aoc_2022/day08.clj"]
                                            :out-path "docs/"}}}}
