@@ -116,4 +116,7 @@
              :follower-history #{start}}
             leader-moves)))
 
+;; Now I can answer Part 1.
+;; >Simulate your complete hypothetical series of motions.
+;; How many positions does the tail of the rope visit at least once?
 (count (:follower-history state))
