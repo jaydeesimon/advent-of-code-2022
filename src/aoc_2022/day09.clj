@@ -128,3 +128,52 @@
 (count (:follower-history state))
 
 ;; Done with Part 1 🎉🎉
+
+;; # Part 2
+;; >Simulate your complete series of motions on a larger rope with ten knots.
+;; How many positions does the tail of the rope visit at least once?
+
+;; Do the same thing as Part 1 but do it with 10 moving pieces instead of just 2.
+;; I can follow the model above but I need to calculate 9 different followers instead
+;; of one and each follower's next move is a function of the follower in front of it.
+
+(def state-2
+  (let [start [0 0]]
+    (reduce (fn [state leader-move]
+              (let [next-move-h (add-coordinates (:h state) leader-move)
+                    next-move-1 (follow-leader next-move-h (:1 state))
+                    next-move-2 (follow-leader next-move-1 (:2 state))
+                    next-move-3 (follow-leader next-move-2 (:3 state))
+                    next-move-4 (follow-leader next-move-3 (:4 state))
+                    next-move-5 (follow-leader next-move-4 (:5 state))
+                    next-move-6 (follow-leader next-move-5 (:6 state))
+                    next-move-7 (follow-leader next-move-6 (:7 state))
+                    next-move-8 (follow-leader next-move-7 (:8 state))
+                    next-move-9 (follow-leader next-move-8 (:9 state))]
+                {:h next-move-h
+                 :1 next-move-1
+                 :2 next-move-2
+                 :3 next-move-3
+                 :4 next-move-4
+                 :5 next-move-5
+                 :6 next-move-6
+                 :7 next-move-7
+                 :8 next-move-8
+                 :9 next-move-9
+                 :9-history (conj (:9-history state) next-move-9)}))
+            {:h start
+             :1 start
+             :2 start
+             :3 start
+             :4 start
+             :5 start
+             :6 start
+             :7 start
+             :8 start
+             :9 start
+             :9-history #{start}}
+            leader-moves)))
+
+(count (:9-history state-2))
+
+;; Done with Part 2 🎉🎉
