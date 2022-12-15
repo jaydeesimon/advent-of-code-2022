@@ -2,7 +2,8 @@
 
  :deps
  {io.github.nextjournal/clerk {:mvn/version "0.12.699"}
-  clj-http/clj-http {:mvn/version "3.12.3"}}
+  clj-http/clj-http {:mvn/version "3.12.3"}
+  ubergraph/ubergraph {:mvn/version "0.8.2"}}
 
  :aliases {:nextjournal/clerk {:exec-fn nextjournal.clerk/build!
                                :exec-args {:paths ["src/aoc_2022/day01.clj"
@@ -15,5 +16,6 @@
                                                    "src/aoc_2022/day08.clj"
                                                    "src/aoc_2022/day09.clj"
                                                    "src/aoc_2022/day10.clj"
-                                                   "src/aoc_2022/day11.clj"]
+                                                   "src/aoc_2022/day11.clj"
+                                                   "src/aoc_2022/day12.clj"]
                                            :out-path "docs/"}}}}
