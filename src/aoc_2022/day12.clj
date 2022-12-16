@@ -61,7 +61,7 @@
 ;; square.)
 
 ;; To paraphrase the above, a coordinate is reachable if it's only one step higher,
-;; the same height or lower. Take into account the start (`a`) and end (`z`) values.
+;; the same height or lower. Take into account the start (`S`->`a`) and end (`E`->`z`) values.
 (defn reachable? [current-letter dest-letter]
   (let [aliases        {\S \a \E \z}
         current-letter (or (aliases current-letter) current-letter)
@@ -85,16 +85,19 @@
                         (map (fn [surrounding-coordinate]
                                [coordinate surrounding-coordinate]))))))))
 
-;; 👋 Hello [ubergraph!](https://github.com/Engelberg/ubergraph)
+;; 👋 Hello [ubergraph!](https://github.com/Engelberg/ubergraph) I will use ubergraph
+;; to define a directed graph using the edges and then eventually use
+;; the [`shortest-path` algo.](https://github.com/Engelberg/ubergraph/blob/master/src/ubergraph/alg.clj#L411)
 (def graph
   (apply uber/digraph edges))
 
-;; Fine the starting coordinate!
+;; Find the starting coordinate!
 (def start (->> coordinate->letter
                 (filter (fn [[k v]]
                           (= v \S)))
                 ffirst))
-;; Fine the ending coordinate!
+
+;; Find the ending coordinate!
 (def end (->> coordinate->letter
               (filter (fn [[k v]]
                         (= v \E)))
