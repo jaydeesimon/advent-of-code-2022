@@ -43,7 +43,7 @@
     :else (throw (ex-info "unknown type" {:type (type x)}))))
 
 ;; My functionality depends specifically on vectors so I'm using this
-;; to a) make sure that any sequence returned becomes a vector. Also,
+;; to a) make sure that any sequence returned becomes a vector and b)
 ;; if it's the end of the `coll` return `nil` and not an empty seq which
 ;; is what would happen if `nil` was passed to `vec`.
 (defn nextv [coll]
@@ -51,7 +51,7 @@
     (when v
       (vec v))))
 
-;; I'll can do this recursively. Since what we do depends on the types of the left
+;; I can do this recursively. Since what we do depends on the types of the left
 ;; and the right, I can list out every possibility for left and right and make sure
 ;; to cover each case.
 (defn what-order [left right]
