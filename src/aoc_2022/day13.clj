@@ -144,3 +144,49 @@
      (reduce +))
 
 ;; Done! 🥳
+
+;; # Part 2
+
+;; >Organize all of the packets into the correct order.
+;; What is the decoder key for the distress signal?
+
+(def divider-packet-1 [[2]])
+
+(def divider-packet-2 [[6]])
+
+(def packets
+  (->> input
+       str/split-lines
+       (remove str/blank?)
+       (map edn/read-string)
+       (concat [divider-packet-1 divider-packet-2])))
+
+(defn packet-comparator [left right]
+  (let [order (what-order left right)]
+    (cond
+      (= order :in-the-right-order) -1
+      (= order :not-in-the-right-order) 1
+      :else 0)))
+
+(def packets-ordered
+  (sort packet-comparator packets))
+
+;; Grab the indexes associated with the packets, sort the packets, and then find the divider packets.
+(->> packets-ordered
+     (map-indexed (fn [idx packet]
+                    [(inc idx) packet]))
+     (filter (fn [[_ packet]]
+               (or (= packet divider-packet-1)
+                   (= packet divider-packet-2)))))
+
+;; Multiply the indices together to get the decoder key!
+(->> packets-ordered
+     (map-indexed (fn [idx packet]
+                    [(inc idx) packet]))
+     (filter (fn [[_ packet]]
+               (or (= packet divider-packet-1)
+                   (= packet divider-packet-2))))
+     (map first)
+     (reduce *))
+
+;; Done! 🔑✅
