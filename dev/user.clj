@@ -5,7 +5,7 @@
 
   ;; Clerk
   (require '[nextjournal.clerk :as clerk])
-  (clerk/serve! {:browse? true})
+  (clerk/serve! {:browse? false})
   (clerk/halt!)
   (clerk/clear-cache!)
 
