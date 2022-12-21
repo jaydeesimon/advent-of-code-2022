@@ -3,7 +3,8 @@
  :deps
  {io.github.nextjournal/clerk {:mvn/version "0.12.699"}
   clj-http/clj-http {:mvn/version "3.12.3"}
-  ubergraph/ubergraph {:mvn/version "0.8.2"}}
+  ubergraph/ubergraph {:mvn/version "0.8.2"}
+  org.clojure/clojure {:mvn/version "1.11.1"}}
 
  :aliases {:nextjournal/clerk {:exec-fn nextjournal.clerk/build!
                                :exec-args {:paths ["src/aoc_2022/day01.clj"

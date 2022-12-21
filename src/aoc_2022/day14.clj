@@ -1,6 +1,7 @@
 (ns aoc-2022.day14
   (:require [aoc-2022.util :as util]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [nextjournal.clerk :as clerk]))
 
 ;; # Day 14
 
@@ -80,8 +81,7 @@
   (->> grid
        (filter (fn [[position type]]
                  (= type :sand)))
-       (map first)
-       (sort sand-comparator)))
+       (map first)))
 
 (find-sands {[0 0] :sand
              [0 3] :sand
@@ -96,7 +96,7 @@
                 (if (not= next-move sand-position)
                   (-> (assoc grid next-move :sand)
                       (dissoc sand-position))
-                  grid)))
+                  (assoc grid sand-position :sand-at-rest))))
             grid
             sands)))
 
@@ -119,17 +119,19 @@
   (advance-state grid))
 
 (defn find-lowest-type [grid type]
-  (->> grid
-       (filter (fn [[position type*]]
-                 (= type* type)))
-       (map first)
-       (reduce (fn [acc position]
-                 (max-key second acc position)))))
+  (let [found-types (->> grid
+                         (filter (fn [[position type*]]
+                                   (= type* type))))]
+    (when (seq found-types)
+      (->> (map first found-types)
+           (reduce (fn [acc position]
+                     (max-key second acc position)))))))
 
 (defn sand-falls-into-abyss? [grid]
   (let [[_ rock-y] (find-lowest-type grid :rock)
         [_ sand-y] (find-lowest-type grid :sand)]
-    (>= sand-y rock-y)))
+    (when (and sand-y rock-y)
+      (>= sand-y rock-y))))
 
 (defn initialize-grid [lines]
   (reduce (fn [grid [p1 p2]]
@@ -188,28 +190,66 @@
 
 (find-lowest-type grid* :rock)
 
-;; lowest
-[496 68]
+(defn grid->string [grid]
+  (let [xmin (->> (keys grid)
+                  (map first)
+                  (apply min))
+        xmax (->> (keys grid)
+                  (map first)
+                  (apply max))
+        ymin (->> (keys grid)
+                  (map second)
+                  (apply min))
+        ymax (->> (keys grid)
+                  (map second)
+                  (apply max))
+        partition-size (- xmax xmin)]
+    (->> (for [y (range ymin (inc ymax))
+               x (range xmin (inc xmax))
+               :let [e (get grid [x y])
+                     c (cond
+                         (= e :rock) \#
+                         (= e :sand) \+
+                         (= e :sand-at-rest) \o
+                         :else \.)]]
+           c)
+         (partition partition-size)
+         (map #(apply str %))
+         (str/join "\n"))))
 
-(comment
-  
-  (def final-grid
-    (loop [grid0 grid*
-           grid  (advance-state grid0)
-           c 1]
-      (cond
-        (> c 20000)
-        grid
-        
-        ;; grid is at rest, add in new sand
-        (= grid0 grid)
-        (let [grid (assoc grid [500 0] :sand)]
-          (recur grid (advance-state grid) (inc c)))
+(def final-grid
+  (loop [grid0 grid*
+         grid  (advance-state grid0)
+         c 1]
+    (cond
+      ;; use this to break out early so I can
+      ;; verify its working
+      (> c 100000)
+      grid
 
-        ;; sand has fallen into the abyss, all done
-        (sand-falls-into-abyss? grid)
-        grid
+      ;; grid is at rest, add in new sand
+      (= grid0 grid)
+      (let [grid (assoc grid [500 0] :sand)]
+        (recur grid (advance-state grid) (inc c)))
 
-        ;; move on to the next state    
-        :else
-        (recur grid (advance-state grid) (inc c))))))
+      ;; sand has fallen into the abyss, all done
+      (sand-falls-into-abyss? grid)
+      grid
+
+      ;; move on to the next state
+      :else
+      (recur grid (advance-state grid) (inc c)))))
+
+;; Print the map.
+^{:nextjournal.clerk/width :full}
+(clerk/md
+  (format "```\n%s\n```" (grid->string final-grid)))
+
+;; How many sands are at rest?
+(->> (vals final-grid)
+     (filter #(= % :sand-at-rest))
+     count)
+
+;; That was really messy but done with Part 1! 🎉🎉
+
+
