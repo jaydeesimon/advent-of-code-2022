@@ -203,7 +203,7 @@
         ymax (->> (keys grid)
                   (map second)
                   (apply max))
-        partition-size (- xmax xmin)]
+        partition-size (inc (- xmax xmin))]
     (->> (for [y (range ymin (inc ymax))
                x (range xmin (inc xmax))
                :let [e (get grid [x y])
