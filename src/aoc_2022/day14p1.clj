@@ -1,4 +1,4 @@
-(ns aoc-2022.day14
+(ns aoc-2022.day14p1
   (:require [aoc-2022.util :as util]
             [clojure.string :as str]
             [nextjournal.clerk :as clerk]))
@@ -186,41 +186,48 @@
                         line-points)
                    (partition 2 1))))))
 
-(def grid* (initialize-grid lines))
+(def initial-grid (initialize-grid lines))
 
-(find-lowest-type grid* :rock)
+(find-lowest-type initial-grid :rock)
 
-(defn grid->string [grid]
-  (let [xmin (->> (keys grid)
-                  (map first)
-                  (apply min))
-        xmax (->> (keys grid)
-                  (map first)
-                  (apply max))
-        ymin (->> (keys grid)
-                  (map second)
-                  (apply min))
-        ymax (->> (keys grid)
-                  (map second)
-                  (apply max))
-        partition-size (inc (- xmax xmin))]
-    (->> (for [y (range ymin (inc ymax))
-               x (range xmin (inc xmax))
-               :let [e (get grid [x y])
-                     c (cond
-                         (= e :rock) \#
-                         (= e :sand) \+
-                         (= e :sand-at-rest) \o
-                         :else \.)]]
-           c)
-         (partition partition-size)
-         (map #(apply str %))
-         (str/join "\n"))))
+(defn grid->string
+  ([grid]
+   (grid->string grid nil))
+  ([grid floor-y]
+   (let [xmin           (->> (keys grid)
+                             (map first)
+                             (apply min))
+         xmax           (->> (keys grid)
+                             (map first)
+                             (apply max))
+         ymin           (->> (keys grid)
+                             (map second)
+                             (apply min))
+         ymax           (->> (keys grid)
+                             (map second)
+                             (apply max))
+         ymax           (if floor-y
+                          (+ 2 ymax)
+                          ymax)
+         partition-size (inc (- xmax xmin))]
+     (->> (for [y (range ymin (inc ymax))
+                x (range xmin (inc xmax))
+                :let [e (get grid [x y])
+                      c (cond
+                          (and (some? floor-y) (= y floor-y)) \#
+                          (= e :rock) \#
+                          (= e :sand) \+
+                          (= e :sand-at-rest) \o
+                          :else \.)]]
+            c)
+          (partition partition-size)
+          (map #(apply str %))
+          (str/join "\n")))))
 
 (def final-grid
-  (loop [grid0 grid*
+  (loop [grid0 initial-grid
          grid  (advance-state grid0)
-         c 1]
+         c     1]
     (cond
       ;; use this to break out early so I can
       ;; verify its working
@@ -252,4 +259,13 @@
 
 ;; That was really messy but done with Part 1! 🎉🎉
 
+;; # Part 2
+
+;; >Using your scan, simulate the falling sand until the source of the sand becomes blocked.
+;; How many units of sand come to rest?
+
+;;>You don't have time to scan the floor, so assume the floor is an infinite horizontal line with a y
+;; coordinate equal to two plus the highest y coordinate of any point in your scan.
+
+;; Going to do Part 2 in a separate namespace because I want to start over...[click here.](https://jaydeesimon.github.io/advent-of-code-2022/src/aoc_2022/day14p2.html)
 
