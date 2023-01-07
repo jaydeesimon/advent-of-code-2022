@@ -1,6 +1,11 @@
 (ns aoc-2022.day15
   (:require [aoc-2022.util :as util]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [nextjournal.clerk :as clerk])
+  (:import (java.awt.image BufferedImage)
+           (javax.imageio ImageIO)
+           (java.io File)
+           (java.awt.geom Rectangle2D Rectangle2D$Double Path2D$Double)))
 
 ;; # Day 15
 
@@ -64,13 +69,6 @@
                                 (- sensor-x distance))))
                        (apply min)))
 
-(def max-sensor-x (->> qualified-sensor->beacon
-                       (map (fn [[sensor beacon]]
-                              (let [distance (manhattan-distance sensor beacon)
-                                    [sensor-x _] sensor]
-                                (+ sensor-x distance))))
-                       (apply max)))
-
 (def beacons
   (->> sensor->beacon
        vals
@@ -83,7 +81,7 @@
 
 ;; Count each point and compare them to each potential sensor-beacon pair. If the point is not a
 ;; beacon and it falls within the range of at least one sensor-beacon pair then it can't be a beacon.
-(transduce
+#_(transduce
   (comp
     (map (fn [x]
            [x interesting-y]))
@@ -99,3 +97,76 @@
 
 ;; Done! 🎉🎉🎉
 
+;; # Part 2
+
+(def max-part2 4000000)
+
+(defn point-in-any-sensor-range? [point]
+  (some
+    (fn [[sensor beacon]]
+      (in-range? sensor beacon point))
+    sensor->beacon))
+
+;; This was a really bad idea.
+(comment
+  (transduce
+    (comp
+      (filter (fn [point]
+                (and
+                  (not (beacons point))
+                  (not (point-in-any-sensor-range? point)))))
+      (take 1))
+    conj
+    []
+    (for [x (range 0 (inc max-part2))
+          y (range 0 (inc max-part2))]
+      [x y])))
+
+(def min-x (->> sensor->beacon
+                (mapcat (fn [[[sensor-x _] [beacon-x _]]]
+                       [sensor-x beacon-x]))
+                (apply min)))
+
+(def max-x (->> sensor->beacon
+                (mapcat (fn [[[sensor-x _] [beacon-x _]]]
+                          [sensor-x beacon-x]))
+                (apply max)))
+
+(def min-y (->> sensor->beacon
+                (mapcat (fn [[[_ sensor-y] [_ beacon-y]]]
+                          [sensor-y beacon-y]))
+                (apply min)))
+
+(def max-y (->> sensor->beacon
+                (mapcat (fn [[[_ sensor-y] [_ beacon-y]]]
+                          [sensor-y beacon-y]))
+                (apply max)))
+
+(def svg-view-box
+  (let [width (- max-x min-x)
+        height (- max-y min-y)]
+    (format "%d %d %d %d" min-x min-y width height)))
+
+(defn plot-sensor-beacon [[sensor-x sensor-y] [beacon-x beacon-y]]
+  (let [distance (manhattan-distance [sensor-x sensor-y] [beacon-x beacon-y])
+        p1       (format "%d,%d" (- sensor-x distance) sensor-y)
+        p2       (format "%d,%d" sensor-x (- sensor-y distance))
+        p3       (format "%d,%d" (+ sensor-x distance) sensor-y)
+        p4       (format "%d,%d" sensor-x (+ sensor-y distance))]
+    [:polygon {:points (str/join " " [p1 p2 p3 p4]) :fill "blue"}]))
+
+(def sample-beacon-sensor1 (first sensor->beacon))
+(def sample-beacon-sensor2 (second sensor->beacon))
+
+(last
+  (take 3 sensor->beacon))
+
+(clerk/html #_{::clerk/width :full}
+  [:svg {:viewBox svg-view-box}
+   #_[:rect {:x min-x :y min-y :width (- max-x min-x) :height (- max-y min-y) :fill "green"}]
+   [:rect {:x 0 :y 0 :width "4000000" :height "4000000" :fill "yellow"}]
+   (map
+     (fn [[sensor beacon]]
+       (plot-sensor-beacon sensor beacon))
+     #_[[1886537 2659379] [2810772 2699609]]
+     sensor->beacon)])
