@@ -1,11 +1,7 @@
 (ns aoc-2022.day15
   (:require [aoc-2022.util :as util]
             [clojure.string :as str]
-            [nextjournal.clerk :as clerk])
-  (:import (java.awt.image BufferedImage)
-           (javax.imageio ImageIO)
-           (java.io File)
-           (java.awt.geom Rectangle2D Rectangle2D$Double Path2D$Double)))
+            [nextjournal.clerk :as clerk]))
 
 ;; # Day 15
 
@@ -69,6 +65,13 @@
                                 (- sensor-x distance))))
                        (apply min)))
 
+(def max-sensor-x (->> qualified-sensor->beacon
+                       (map (fn [[sensor beacon]]
+                              (let [distance (manhattan-distance sensor beacon)
+                                    [sensor-x _] sensor]
+                                (+ sensor-x distance))))
+                       (apply max)))
+
 (def beacons
   (->> sensor->beacon
        vals
@@ -81,92 +84,95 @@
 
 ;; Count each point and compare them to each potential sensor-beacon pair. If the point is not a
 ;; beacon and it falls within the range of at least one sensor-beacon pair then it can't be a beacon.
-#_(transduce
-  (comp
-    (map (fn [x]
-           [x interesting-y]))
-    (map (fn [point]
-           (if (and (not (beacons point))
-                    (some (fn [[sensor beacon]]
-                            (in-range? sensor beacon point))
-                          qualified-sensor->beacon))
-             1
-             0))))
-  +
-  (range min-sensor-x (inc max-sensor-x)))
+(comment
+  (transduce
+    (comp
+      (map (fn [x]
+             [x interesting-y]))
+      (map (fn [point]
+             (if (and (not (beacons point))
+                      (some (fn [[sensor beacon]]
+                              (in-range? sensor beacon point))
+                            qualified-sensor->beacon))
+               1
+               0))))
+    +
+    (range min-sensor-x (inc max-sensor-x))))
 
 ;; Done! 🎉🎉🎉
 
 ;; # Part 2
 
+;;>Find the only possible position for the distress beacon. What is its tuning frequency?
+
+;; Took me a while to figure out Part 2. I initially got tripped up by the sensor-beacon
+;; boxes being turned at 45 degrees. Eventually, I realized I can think about the boxes
+;; as groups of vertical lines representing y ranges. At that point, it was a matter of
+;; figuring out how to calculate the y ranges and merging them.
+
+;; Ugh took forever though.
+
 (def max-part2 4000000)
 
-(defn point-in-any-sensor-range? [point]
-  (some
-    (fn [[sensor beacon]]
-      (in-range? sensor beacon point))
-    sensor->beacon))
+;; Standard way to merge ranges aka intervals.
+(defn merge-ranges [ranges]
+  (if (not (seq ranges))
+    ranges
+    (let [ranges (sort-by first ranges)]
+      (loop [stack  [(first ranges)]
+             ranges (rest ranges)]
+        (if (not (seq ranges))
+          stack
+          (let [[top-start top-end] (peek stack)
+                current (first ranges)
+                [current-start current-end] current]
+            (if (< top-end current-start)
+              (recur (conj stack current) (rest ranges))
+              (let [top-end (max top-end current-end)]
+                (recur (conj (pop stack) [top-start top-end]) (rest ranges))))))))))
 
-;; This was a really bad idea.
-(comment
-  (transduce
-    (comp
-      (filter (fn [point]
-                (and
-                  (not (beacons point))
-                  (not (point-in-any-sensor-range? point)))))
-      (take 1))
-    conj
-    []
-    (for [x (range 0 (inc max-part2))
-          y (range 0 (inc max-part2))]
-      [x y])))
+;; Given a sensor-beacon box and an `x`, calculate the y range at that `x`.
+(defn y-range [sensor beacon x]
+  (let [radius (manhattan-distance sensor beacon)
+        [sensor-x sensor-y] sensor
+        center-x sensor-x
+        offset (- radius (abs (- center-x x)))]
+    [(- sensor-y offset) (+ sensor-y offset)]))
 
-(def min-x (->> sensor->beacon
-                (mapcat (fn [[[sensor-x _] [beacon-x _]]]
-                       [sensor-x beacon-x]))
-                (apply min)))
+;; Once I have a list of merged ranges, this function can be used to find any open gaps.
+;; The open gap (should just be of size one) is where the distress beacon lies.
+(defn find-gaps [ranges]
+  (->> ranges
+       (partition 2 1)
+       (map (fn [[[_ r1-end] [r2-start _]]]
+              [(inc r1-end) (dec r2-start)]))
+       (filter (fn [[start end]]
+                 (<= start end)))))
 
-(def max-x (->> sensor->beacon
-                (mapcat (fn [[[sensor-x _] [beacon-x _]]]
-                          [sensor-x beacon-x]))
-                (apply max)))
+(defn distress-beacon-range-possibilities [x]
+  (->> sensor->beacon
+       (map (fn [[sensor beacon]]
+              (y-range sensor beacon x)))
+       (filter (fn [[start end]]
+                 (<= start end)))
+       merge-ranges
+       find-gaps))
 
-(def min-y (->> sensor->beacon
-                (mapcat (fn [[[_ sensor-y] [_ beacon-y]]]
-                          [sensor-y beacon-y]))
-                (apply min)))
+;; Loop through every `x` in the bounding box, calculate the `y` ranges where the distress 
+;; CANNOT be and then look for a gap in those ranges.
+(transduce
+  (comp
+    (map (fn [x]
+           {:x x :gaps (distress-beacon-range-possibilities x)}))
+    (filter (comp seq :gaps)) ;; keep elements where there is a gap
+    (take 1))
+  conj
+  []
+  (range 0 (inc max-part2)))
 
-(def max-y (->> sensor->beacon
-                (mapcat (fn [[[_ sensor-y] [_ beacon-y]]]
-                          [sensor-y beacon-y]))
-                (apply max)))
+(defn tuning-frequency [x y]
+  (+ (* max-part2 x) y))
 
-(def svg-view-box
-  (let [width (- max-x min-x)
-        height (- max-y min-y)]
-    (format "%d %d %d %d" min-x min-y width height)))
+(tuning-frequency 3435885 2639657)
 
-(defn plot-sensor-beacon [[sensor-x sensor-y] [beacon-x beacon-y]]
-  (let [distance (manhattan-distance [sensor-x sensor-y] [beacon-x beacon-y])
-        p1       (format "%d,%d" (- sensor-x distance) sensor-y)
-        p2       (format "%d,%d" sensor-x (- sensor-y distance))
-        p3       (format "%d,%d" (+ sensor-x distance) sensor-y)
-        p4       (format "%d,%d" sensor-x (+ sensor-y distance))]
-    [:polygon {:points (str/join " " [p1 p2 p3 p4]) :fill "blue"}]))
-
-(def sample-beacon-sensor1 (first sensor->beacon))
-(def sample-beacon-sensor2 (second sensor->beacon))
-
-(last
-  (take 3 sensor->beacon))
-
-(clerk/html #_{::clerk/width :full}
-  [:svg {:viewBox svg-view-box}
-   #_[:rect {:x min-x :y min-y :width (- max-x min-x) :height (- max-y min-y) :fill "green"}]
-   [:rect {:x 0 :y 0 :width "4000000" :height "4000000" :fill "yellow"}]
-   (map
-     (fn [[sensor beacon]]
-       (plot-sensor-beacon sensor beacon))
-     #_[[1886537 2659379] [2810772 2699609]]
-     sensor->beacon)])
+;; Done! 🎉🎉🎉
