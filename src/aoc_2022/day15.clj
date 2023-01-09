@@ -84,20 +84,19 @@
 
 ;; Count each point and compare them to each potential sensor-beacon pair. If the point is not a
 ;; beacon and it falls within the range of at least one sensor-beacon pair then it can't be a beacon.
-(comment
-  (transduce
-    (comp
-      (map (fn [x]
-             [x interesting-y]))
-      (map (fn [point]
-             (if (and (not (beacons point))
-                      (some (fn [[sensor beacon]]
-                              (in-range? sensor beacon point))
-                            qualified-sensor->beacon))
-               1
-               0))))
-    +
-    (range min-sensor-x (inc max-sensor-x))))
+(transduce
+  (comp
+    (map (fn [x]
+           [x interesting-y]))
+    (map (fn [point]
+           (if (and (not (beacons point))
+                    (some (fn [[sensor beacon]]
+                            (in-range? sensor beacon point))
+                          qualified-sensor->beacon))
+             1
+             0))))
+  +
+  (range min-sensor-x (inc max-sensor-x)))
 
 ;; Done! 🎉🎉🎉
 
